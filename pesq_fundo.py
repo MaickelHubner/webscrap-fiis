@@ -120,7 +120,7 @@ def _treat_html(lista):
 
 
 def enviar(lista):
-    lista_emails = ['maickel.hubner@gmail.com']
+    lista_emails = ['maickel.hubner@gmail.com', 'deboramals@gmail.com']
     assunto = 'Atualização de FIIs'
     mensagem = _load_mail_template()
 
