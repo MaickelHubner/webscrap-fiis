@@ -1,0 +1,3 @@
+[flake8]
+exclude = .*,angular,ionic,data,*ofxparse*,*migrations*
+max-line-length = 119
