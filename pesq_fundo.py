@@ -98,7 +98,7 @@ def _treat_html(lista):
     for fundo in lista.keys():
         if len(lista[fundo]['notas']) > 0:
             texto_fundo = f'''
-                <div class="container-fluid bg-2" style="margin-top: 50px">
+                <div class="container-fluid bg-3" style="margin-top: 50px">
                 <p style="font-size: 130%; font-weight: bold; margin-bottom: 30px">
                     {fundo} - {lista[fundo]['nome']}
                 </p>
@@ -120,12 +120,20 @@ def _treat_html(lista):
 
 
 def enviar(lista):
-    lista_emails = ['maickel.hubner@gmail.com', 'deboramals@gmail.com']
+    lista_emails = ['maickel.hubner@gmail.com']  # , 'deboramals@gmail.com']
     assunto = 'Atualização de FIIs'
     mensagem = _load_mail_template()
 
     mensagem = mensagem.replace('[[DATA]]', convDateToDMY(hoje()))
-    mensagem = mensagem.replace('[[INFOS]]', _treat_html(lista))
+    noticias = _treat_html(lista)
+    if noticias == '':
+        noticias = '''
+            <div class="container-fluid bg-3" style="margin-top: 50px">
+            <p><b>Nenhuma notícia dos seus fundos no período.</b></p>
+            </div>
+        '''
+    mensagem = mensagem.replace('[[INFOS]]', noticias)
+    mensagem = mensagem.replace('[[LISTA_FUNDOS]]', ', '.join(lista.keys()))
 
     _send_mail(lista_emails, assunto, mensagem)
 
