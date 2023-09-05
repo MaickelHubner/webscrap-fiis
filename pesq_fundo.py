@@ -26,7 +26,7 @@ def convDateToDMY(data):
 
 def executar(fundo):
     dados = {}
-    delta_dias = -3 if hoje().weekday == 0 else -1
+    delta_dias = -5 if hoje().weekday == 0 else -3
 
     url = 'https://www.fundsexplorer.com.br/funds/{}/'.format(fundo.lower())
     page = requests.get(url, headers={'User-Agent': 'Mozzila/5.0'})
@@ -120,7 +120,7 @@ def _treat_html(lista):
 
 
 def enviar(lista):
-    lista_emails = ['maickel.hubner@gmail.com']  # , 'deboramals@gmail.com']
+    lista_emails = ['maickel.hubner@gmail.com', 'deboramals@gmail.com']
     assunto = 'Atualização de FIIs'
     mensagem = _load_mail_template()
 
