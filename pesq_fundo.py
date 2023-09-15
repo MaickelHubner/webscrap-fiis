@@ -1,5 +1,6 @@
 import datetime
 import os
+import re
 import smtplib
 import sys
 from email.message import EmailMessage
@@ -20,8 +21,33 @@ def adiciona_dias(numero_dias=0, data=hoje()):
     return data + datetime.timedelta(days=numero_dias)
 
 
-def convDateToDMY(data):
+def converter_data_dmy(data):
     return data.strftime('%d/%m/%Y')
+
+
+def get_row_info(comunicacao):
+    rendimento = False
+    if 'communicated__grid__rend' in comunicacao.get('class'):
+        texto = comunicacao.find('p').text.replace('\n', ' ')
+        link = ''
+        data = comunicacao.find_all('li')[0].find('b').text
+        rendimento = True
+    else:
+        texto = comunicacao.find('a').text
+        link = comunicacao.find('a', href=True)['href']
+        data = comunicacao.find('p').text.replace('.', '/')
+
+    texto = ' '.join(texto.split())
+    data = ' '.join(data.split())
+
+    data = texto_para_data(data)
+
+    return {
+        'data': data,
+        'texto': texto,
+        'link': link,
+        'rendimento': rendimento,
+    }
 
 
 def executar(fundo):
@@ -42,34 +68,41 @@ def executar(fundo):
     comunicacoes = soup.find_all(class_='communicated__grid__row')
     notas = []
     for comunicacao in comunicacoes:
-        if 'communicated__grid__rend' in comunicacao.get('class'):
-            texto = comunicacao.find('p').text.replace('\n', ' ')
-            link = ''
-            data = comunicacao.find_all('li')[0].find('b').text
-        else:
-            texto = comunicacao.find('a').text
-            link = comunicacao.find('a', href=True)['href']
-            data = comunicacao.find('p').text.replace('.', '/')
+        info = get_row_info(comunicacao)
 
-        texto = ' '.join(texto.split())
-        data = ' '.join(data.split())
+        # Se for uma comunicação de rendimento, procura a anterior para calcular a variação
+        if info['rendimento']:
+            ant = procura_rend_ant(comunicacoes, info['data'])
+            if ant is not None:
+                val_atu = float(re.findall(r'R\$\s*([\d,]+)', info['texto'])[0].replace(',', '.'))
+                val_ant = float(re.findall(r'R\$\s*([\d,]+)', ant['texto'])[0].replace(',', '.'))
+                dif = val_atu - val_ant
+                perc = dif * 100 / val_ant
+                info['texto'] += f' (valor anterior R$ {val_ant:.2f}, diferença de R$ {dif:.2f} ou {perc:.4f} %)'
 
-        data = texto_para_data(data)
+        if info['data'] < adiciona_dias(delta_dias):
+            break
 
-        if data < adiciona_dias(delta_dias):
-            continue
-
-        notas.append(
-            {
-                'data': data,
-                'texto': texto,
-                'link': link,
-            }
-        )
+        notas.append(info)
 
     dados['notas'] = notas
 
     return dados
+
+
+def procura_rend_ant(comunicacoes, data):
+    ant = None
+    for comunicacao in comunicacoes:
+        info = get_row_info(comunicacao)
+
+        if info['data'] >= data:
+            continue
+
+        if info['rendimento']:
+            ant = info
+            break
+
+    return ant
 
 
 def _send_mail(to_email, subject, message, server='smtp.zoho.com', from_email=os.getenv('EMAIL_FIIS', '')):
@@ -105,14 +138,14 @@ def _treat_html(lista):
             '''
             for noticia in lista[fundo]['notas']:
                 if noticia['link'] == '':
-                    texto_fundo += f"<p>{convDateToDMY(noticia['data'])} - {noticia['texto']}</p>"
+                    texto_fundo += f"<p>{converter_data_dmy(noticia['data'])} - {noticia['texto']}</p>"
                 else:
                     texto_fundo += f"""
                         <p><a
                             href='{noticia['link']}'
                             target='_blank'
                             style='color: #03a9f4'
-                        >{convDateToDMY(noticia['data'])} - {noticia['texto']}</a></p>
+                        >{converter_data_dmy(noticia['data'])} - {noticia['texto']}</a></p>
                     """
             texto_fundo += '</div>'
             texto += texto_fundo
@@ -124,7 +157,7 @@ def enviar(lista):
     assunto = 'Atualização de FIIs'
     mensagem = _load_mail_template()
 
-    mensagem = mensagem.replace('[[DATA]]', convDateToDMY(hoje()))
+    mensagem = mensagem.replace('[[DATA]]', converter_data_dmy(hoje()))
     noticias = _treat_html(lista)
     if noticias == '':
         noticias = '''
