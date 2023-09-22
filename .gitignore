@@ -1,5 +1,6 @@
 .vscode
 
+.env
 *.command
 
 .DS_Store
