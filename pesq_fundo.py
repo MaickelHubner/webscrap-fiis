@@ -1,5 +1,4 @@
 import datetime
-import os
 import re
 import smtplib
 import sys
@@ -7,6 +6,24 @@ from email.message import EmailMessage
 
 import requests
 from bs4 import BeautifulSoup
+from environs import Env
+
+EMAIL_LIST = ["maickel.hubner@gmail.com", "deboramals@gmail.com"]
+# EMAIL_LIST = ["maickel.hubner@gmail.com"]
+
+LISTA_DE_FUNDOS = [
+    "RNGO11",
+    "BBFI11B",
+    "HGPO11",
+    "HFOF11",
+    "RECR11",
+    "HABT11",
+    "XPLG11",
+    "HGRU11",
+]
+
+env = Env()
+env.read_env(".env")
 
 
 def hoje():
@@ -118,20 +135,24 @@ def _send_mail(
     subject,
     message,
     server="smtp.zoho.com",
-    from_email=os.getenv("EMAIL_FIIS", ""),
+    from_email=None,
 ):
+    from_email = from_email or env("EMAIL_FIIS", "")
+    senha_email = env("SENHA_EMAIL_FIIS", "")
+
+    if not from_email or not senha_email:
+        raise ValueError("Email and password environment variables must be set")
+
     msg = EmailMessage()
     msg["Subject"] = subject
     msg["From"] = from_email
     msg["To"] = ", ".join(to_email)
-    # msg.set_content(message)
     msg.add_alternative(message, subtype="html")
-    server = smtplib.SMTP(server, 587)
-    # server.set_debuglevel(1)
-    server.starttls()
-    server.login(os.getenv("EMAIL_FIIS", ""), os.getenv("SENHA_EMAIL_FIIS", ""))
-    server.send_message(msg)
-    server.quit()
+
+    with smtplib.SMTP(server, 587) as server:
+        server.starttls()
+        server.login(from_email, senha_email)
+        server.send_message(msg)
 
 
 def _load_mail_template():
@@ -167,7 +188,7 @@ def _treat_html(lista):
 
 
 def enviar(lista):
-    lista_emails = ["maickel.hubner@gmail.com", "deboramals@gmail.com"]
+    lista_emails = EMAIL_LIST
     assunto = "Atualização de FIIs"
     mensagem = _load_mail_template()
 
@@ -195,16 +216,7 @@ if FUNDO is not None:
     enviar(lista)
 else:
     lista = {}
-    for fundo in [
-        "RNGO11",
-        "BBFI11B",
-        "HGPO11",
-        "HFOF11",
-        "RECR11",
-        "HABT11",
-        "XPLG11",
-        "HGRU11",
-    ]:
+    for fundo in LISTA_DE_FUNDOS:
         f = executar(fundo)
         lista[fundo] = f
     enviar(lista)
