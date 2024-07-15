@@ -69,7 +69,7 @@ def get_row_info(comunicacao):
 
 def executar(fundo):
     dados = {}
-    delta_dias = -4 if hoje().weekday == 0 else -2
+    delta_dias = -4 if hoje().weekday() == 0 else -2
 
     url = "https://www.fundsexplorer.com.br/funds/{}/".format(fundo.lower())
     page = requests.get(url, headers={"User-Agent": "Mozzila/5.0"})
