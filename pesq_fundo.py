@@ -47,7 +47,7 @@ def get_row_info(comunicacao):
     if "communicated__grid__rend" in comunicacao.get("class"):
         texto = comunicacao.find("p").text.replace("\n", " ")
         link = ""
-        data = comunicacao.find_all("li")[0].find("b").text
+        data = comunicacao.find_all("b")[1].text
         rendimento = True
     else:
         texto = comunicacao.find("a").text
