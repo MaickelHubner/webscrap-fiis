@@ -11,16 +11,7 @@ from environs import Env
 EMAIL_LIST = ["maickel.hubner@gmail.com", "deboramals@gmail.com"]
 # EMAIL_LIST = ["maickel.hubner@gmail.com"]
 
-LISTA_DE_FUNDOS = [
-    "RNGO11",
-    "BBFI11B",
-    "HGPO11",
-    "HFOF11",
-    "RECR11",
-    "HABT11",
-    "XPLG11",
-    "HGRU11",
-]
+LISTA_DE_FUNDOS = ["RNGO11", "HFOF11", "RECR11", "HABT11", "XPLG11", "HGRU11", "TRXF11"]
 
 env = Env()
 env.read_env(".env")
