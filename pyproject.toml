@@ -1,0 +1,35 @@
+[project]
+name = "webscrap-fiis"
+version = "0.1.0"
+description = "Web scraper for Brazilian Real Estate Investment Funds (FIIs)"
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+    "requests",
+    "beautifulsoup4",
+    "environs",
+]
+
+[tool.ruff]
+line-length = 119
+exclude = [
+    ".*",
+    "angular",
+    "ionic",
+    "data",
+    "*ofxparse*",
+    "*migrations*",
+]
+
+[tool.ruff.format]
+quote-style = "preserve"
+
+[tool.ruff.lint]
+select = [
+    "E",      # pycodestyle errors
+    "W",      # pycodestyle warnings
+    "F",      # Pyflakes
+]
+
+[tool.ruff.lint.isort]
+known-first-party = ["pesq_fundo"]
